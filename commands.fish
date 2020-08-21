@@ -5,7 +5,7 @@ function aws
 	chcon -Rt svirt_sandbox_file_t $PWD/.aws
 	podman run --rm -it \
 	    -v $PWD/.aws:/root/.aws \
-	    eigenmode.azurecr.io/aws-cli aws $argv
+	    aws-cli aws $argv
 end
 
 function aws-dir
@@ -16,7 +16,7 @@ function aws-dir
 		chcon -Rt svirt_sandbox_file_t $PWD
 		podman run --rm -it \
 		    -v $PWD:/root/ \
-		    eigenmode.azurecr.io/aws-cli aws $argv
+		    aws-cli aws $argv
 	end
 end
 
@@ -29,11 +29,11 @@ function az
 end
 
 function mssql-cli
-	podman run --rm -it eigenmode.azurecr.io/fedora-base mssql-cli $argv
+	podman run --rm -it fedora-base mssql-cli $argv
 end
 
 function pgcli
-	podman run --rm -it eigenmode.azurecr.io/fedora-base pgcli $argv
+	podman run --rm -it fedora-base pgcli $argv
 end
 
 function cargo
@@ -41,12 +41,21 @@ function cargo
 	    echo "Please run in a more appropriate directory!"
 	else
 	    chcon -Rt svirt_sandbox_file_t $PWD;
-	    mkdir -p $PWD/.cargo-registry;
+	    chcon -t svirt_sandbox_file_t $HOME/.git-credentials;
+	    chcon -t svirt_sandbox_file_t $HOME/.gitconfig;
+	    mkdir -p $HOME/Applications/cargo-root/registry;
+	    chcon -t svirt_sandbox_file_t $HOME/Applications/cargo-root/registry;
+	    mkdir -p $HOME/Applications/cargo-usr/registry;
+	    chcon -t svirt_sandbox_file_t $HOME/Applications/cargo-usr/registry;
 	    podman run --rm \
 		-v $PWD:/workingdir \
-		-v $PWD/.cargo-registry:/usr/local/cargo/registry \
+		-v $HOME/.git-credentials:/root/.git-credentials \
+		-v $HOME/.gitconfig:/root/.gitconfig \
+		-v $HOME/Applications/cargo-root/registry:/usr/local/cargo/registry \
+		-v $HOME/Applications/cargo-usr/registry:/root/.cargo/registry \
+		-e RUST_LOG=$RUST_LOG \
 		-e USER=$USER \
-		-it eigenmode.azurecr.io/rs-builder cargo $argv
+		-it rs-builder cargo $argv
 	end
 end
 
@@ -55,7 +64,7 @@ function hledger
 	chcon -Rt svirt_sandbox_file_t ~/Applications/hledger
 	podman run --rm -it \
 	    -v ~/Applications/hledger:/root \
-	    eigenmode.azurecr.io/fedora-base hledger $argv
+	    fedora-base hledger $argv
 end
 
 function mssql
@@ -68,26 +77,35 @@ function nvim
 	    podman run --rm \
 		-v $PWD/$1:/workingdir/$1 \
 		-e USER=$USER \
-		-it eigenmode.azurecr.io/neovim nvim $1
+		-it neovim nvim $1
 	else
 	    chcon -Rt svirt_sandbox_file_t $PWD
 	    podman run --rm \
 		-v $PWD:/workingdir \
 		-e USER=$USER \
-		-it eigenmode.azurecr.io/neovim nvim $1
+		-it neovim nvim $1
 	end
 end
 
 function nvim-rs
 	if test -f "Cargo.toml"
 	    touch Session.vim
-	    mkdir -p $PWD/.cargo-registry;
+	    #mkdir -p $PWD/.cargo-registry;
 	    chcon -Rt svirt_sandbox_file_t $PWD
+	    chcon -t svirt_sandbox_file_t $HOME/.git-credentials;
+	    chcon -t svirt_sandbox_file_t $HOME/.gitconfig;
+	    mkdir -p $HOME/Applications/cargo-root/registry;
+	    chcon -t svirt_sandbox_file_t $HOME/Applications/cargo-root/registry;
+	    mkdir -p $HOME/Applications/cargo-usr/registry;
+	    chcon -t svirt_sandbox_file_t $HOME/Applications/cargo-usr/registry;
 	    podman run --rm \
 		-v $PWD:/workingdir \
-		-v $PWD/.cargo-registry:/root/.cargo/registry \
+		-v $HOME/Applications/cargo-root/registry:/usr/local/cargo/registry \
+		-v $HOME/Applications/cargo-usr/registry:/root/.cargo/registry \
+		-v $HOME/.git-credentials:/root/.git-credentials \
+		-v $HOME/.gitconfig:/root/.gitconfig \
 		-e USER=$USER \
-		-it eigenmode.azurecr.io/neovim nvim -S
+		-it neovim nvim -S
 	else
 		echo "Please run me in the root directory of a rust project"
 	end
@@ -100,7 +118,7 @@ function nvim-py
 	    podman run --rm \
 		-v $PWD:/workingdir \
 		-e USER=$USER \
-		-it eigenmode.azurecr.io/neovim nvim -S
+		-it neovim nvim -S
 	else
 		echo "Please run me in the root directory of a python project"
 	end
@@ -111,7 +129,7 @@ function task
 	chcon -Rt svirt_sandbox_file_t ~/Applications/taskwarrior
 	podman run --rm -it \
 	    -v ~/Applications/taskwarrior:/root \
-	    eigenmode.azurecr.io/fedora-base task $argv
+	    fedora-base task $argv
 end
 
 function tf
@@ -125,7 +143,7 @@ function tf
 		    -v $PWD:/workingdir \
 		    -v $PWD/.terraform.d:/root/.terraform.d \
 		    -v $PWD/.terraformrc:/root/.terraformrc \
-		    eigenmode.azurecr.io/terraform bash -c "cd /workingdir && terraform $argv"
+		    terraform bash -c "cd /workingdir && terraform $argv"
 	end
 end
 
@@ -134,7 +152,7 @@ function timew
 	chcon -Rt svirt_sandbox_file_t ~/Applications/timewarrior
 	podman run --rm -it \
 	    -v ~/Applications/timewarrior:/root \
-	    eigenmode.azurecr.io/fedora-base timew $argv
+	    fedora-base timew $argv
 end
 
 function wasm-pack
@@ -145,7 +163,7 @@ function wasm-pack
 			-v $PWD:/workingdir \
 			-v $PWD/.cargo-registry:/usr/local/cargo/registry \
 			-e USER=$USER \
-			-it eigenmode.azurecr.io/rs-builder wasm-pack $argv
+			-it rs-builder wasm-pack $argv
 	else
 		echo "Please run me in the root directory of a rust project"
 	end

@@ -1,9 +1,11 @@
-FROM quay.io/esheppa/cargo
+FROM rs-builder
 RUN dnf install -y \
 	neovim \
 	python3-neovim \
 	pip \
 	ripgrep \
+	curl \
+	libcurl-devel \
 	python3-devel \
 	libicu-devel \
 	python3 \
@@ -22,7 +24,7 @@ RUN curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs https://r
 RUN mkdir -p /workingdir
 RUN mkdir /root/.config
 RUN mkdir /root/.config/nvim
-COPY init.vim /root/.config/nvim
+COPY neovim/init.vim /root/.config/nvim
 RUN nvim +PlugUpgrade +PlugInstall +UpdateRemotePlugins +qa
 RUN printf "colorscheme gruvbox\n" >> /root/.config/nvim/init.vim
 RUN printf "set background=light\n" >> /root/.config/nvim/init.vim

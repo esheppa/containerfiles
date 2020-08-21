@@ -1,9 +1,12 @@
-FROM quay.io/esheppa/fedora-base
+FROM fedora-base
 
 RUN dnf install -y \
+	git \
 	clang \
-    openssl \
+	    openssl \
 	openssl-devel \
+	curl \
+	libcurl-devel \
 	gcc
 RUN dnf clean all
 

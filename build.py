@@ -39,7 +39,7 @@ no_deps = [
 ]
 
 dep_fedora_base = [
-	"cargo",
+	"rs-builder",
 	"jq",
 	"task",
 	"hledger",
@@ -50,32 +50,53 @@ dep_fedora_base = [
 ]
 
 
-with open('repo-auth','r') as f:
-	credentials = str.encode(f.read())
-	subprocess.run(["podman", "login", "-u esheppa", "--password-stdin", "quay.io"], input = credentials)
+try:
+	if sys.argv[2] == "push":
+		with open('repo-auth','r') as f:
+			credentials = str.encode(f.read())
+			subprocess.run(["podman", "login", "-u esheppa", "--password-stdin", "quay.io"], input = credentials)
+except:
+	print("Not logging in")
 
 if sys.argv[1] == "base":
 	print("Building: fedora-base")
 	remove_image("fedora:latest","registry.fedoraproject.org")
 	build_image("fedora-base")
-	push_image("fedora-base", "quay.io/esheppa")
+	try:
+		if sys.argv[2] == "push":
+			push_image("fedora-base", "quay.io/esheppa")
+	except:
+		print("Not pushing fedora-base")
 elif sys.argv[1] == "utils":
 	for dir in dep_fedora_base:
 		print("Building:", dir)
 		remove_image(dir)
 		build_image(dir)
-		push_image(dir, "quay.io/esheppa")
+		try:
+			if sys.argv[2] == "push":
+				push_image(dir, "quay.io/esheppa")
+		except:
+			print("Not pushing", dir)
 elif sys.argv[1] == "neovim":
 		print("Building: neovim")
 		remove_image("neovim")
 		build_image("neovim")
-		push_image("neovim", "quay.io/esheppa")
+		try:
+			if sys.argv[2] == "push":
+				push_image("neovim", "quay.io/esheppa")
+		except:
+			print("Not pushing neovim")
 elif sys.argv[1] == "other":
 	for dir in no_deps:
 		print("Building:", dir)
 		remove_image(dir)
 		build_image(dir)
 		push_image(dir, "quay.io/esheppa")
+		try:
+			if sys.argv[2] == "push":
+				push_image(dir, "quay.io/esheppa")
+		except:
+			print("Not pushing", dir)
 else:
     print("Please choose a subcommand from `base`, `utils`, `neovim` or `other`")
 
