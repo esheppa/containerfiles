@@ -40,6 +40,9 @@ function cargo
 	if test $PWD = $HOME
 	    echo "Please run in a more appropriate directory!"
 	else
+	    if not test -n "$RUST_LOG"
+		set -x RUST_LOG info
+	    end
 	    chcon -Rt svirt_sandbox_file_t $PWD;
 	    chcon -t svirt_sandbox_file_t $HOME/.git-credentials;
 	    chcon -t svirt_sandbox_file_t $HOME/.gitconfig;
